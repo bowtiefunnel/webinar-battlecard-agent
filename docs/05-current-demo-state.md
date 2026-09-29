@@ -39,6 +39,17 @@ The Solstice Media card is the one worth looking at closely — Claude flagged "
 as a competitor even though the rep's question only named HubSpot, because it read that
 signal out of the (fake, but realistic-shaped) enrichment data on its own.
 
+## Bug found and fixed while writing this documentation
+
+While exporting Workflow 2 to JSON for this repo, its `Route by Action` switch node's
+`launch_sequence` output (index 2) was found to have a stray connection back to itself,
+alongside the correct connection to `Log Outbound Sequence (Simulated)` — not present in
+the original build, cause unknown. It never manifested as an actual infinite loop in any
+test run, but it was real and has been removed (`removeConnection` with `sourceIndex: 2`
+targeting itself). Worth a sanity pass on connection graphs after any live workflow has
+been through several rounds of `update_workflow`/`test_workflow` calls, even when
+executions keep succeeding — a successful execution doesn't guarantee a clean graph.
+
 ## What's never been tested with real credentials
 
 1. **Supabase** — the actual query (filter `accounts` by domain, limit 1) has never run

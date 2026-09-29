@@ -1,0 +1,34 @@
+{
+  "name": "Battlecard: Slack Action Handler",
+  "nodes": [
+    {"parameters":{"httpMethod":"POST","path":"battlecard-slack-actions","responseMode":"responseNode","options":{}},"id":"04fe9e1d-a2f8-41e0-bdc7-51c2e6edbef3","name":"Slack Interaction Webhook","type":"n8n-nodes-base.webhook","typeVersion":2.1,"position":[-128,288]},
+    {"parameters":{"assignments":{"assignments":[{"id":"parsed-payload","name":"payload","type":"object","value":"={{ JSON.parse($('Slack Interaction Webhook').item.json.body.payload) }}"}]},"options":{}},"id":"d565b549-f189-4593-a4ba-e8c0bb40fb74","name":"Parse Slack Interaction","type":"n8n-nodes-base.set","typeVersion":3.5,"position":[128,288]},
+    {"parameters":{"rules":{"values":[{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"={{ $('Parse Slack Interaction').item.json.payload.actions[0].action_id }}","operator":{"type":"string","operation":"equals"},"rightValue":"claim_lead"}],"combinator":"and"}},{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"={{ $('Parse Slack Interaction').item.json.payload.actions[0].action_id }}","operator":{"type":"string","operation":"equals"},"rightValue":"review_talking_points"}],"combinator":"and"}},{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":1},"conditions":[{"leftValue":"={{ $('Parse Slack Interaction').item.json.payload.actions[0].action_id }}","operator":{"type":"string","operation":"equals"},"rightValue":"launch_sequence"}],"combinator":"and"}}]},"options":{"fallbackOutput":"extra","renameFallbackOutput":"Unknown Action"}},"id":"33d08bef-1a65-493c-b225-d40960276cf4","name":"Route by Action","type":"n8n-nodes-base.switch","typeVersion":3.4,"position":[448,256]},
+    {"parameters":{"operation":"update","tableId":"accounts","filters":{"conditions":[{"keyName":"id","condition":"eq","keyValue":"={{ JSON.parse($('Parse Slack Interaction').item.json.payload.actions[0].value).accountId }}"}]},"fieldsUi":{"fieldValues":[{"fieldId":"claimed_by","fieldValue":"={{ $('Parse Slack Interaction').item.json.payload.user.username }}"},{"fieldId":"claimed_at","fieldValue":"={{ $now.toISO() }}"}]}},"id":"76ae0d44-b2d4-4acf-b4a9-1c14bd03b777","name":"Claim Lead in Supabase","type":"n8n-nodes-base.supabase","typeVersion":1,"position":[672,0]},
+    {"parameters":{"assignments":{"assignments":[{"id":"response-text","name":"responseText","type":"string","value":"={{ '✅ Lead claimed by ' + $('Parse Slack Interaction').item.json.payload.user.username }}"}]},"options":{}},"id":"b93b9f1f-ea26-4844-a963-2cc5e6b730f9","name":"Set Claim Lead Response","type":"n8n-nodes-base.set","typeVersion":3.5,"position":[896,0]},
+    {"parameters":{"respondWith":"json","responseBody":"={{ { \"response_type\": \"in_channel\", \"replace_original\": false, \"text\": $json.responseText } }}","options":{"responseCode":200}},"id":"ff0410aa-acf4-4616-b778-3ffcfb593215","name":"Respond to Slack","type":"n8n-nodes-base.respondToWebhook","typeVersion":1.5,"position":[1120,288]},
+    {"parameters":{"assignments":{"assignments":[{"id":"response-text","name":"responseText","type":"string","value":"📋 Talking points are in the message above — no additional action needed."}]},"options":{}},"id":"dcfdcf4b-80b3-4ba1-8ae5-cade7983904f","name":"Set Review Response","type":"n8n-nodes-base.set","typeVersion":3.5,"position":[896,192]},
+    {"parameters":{"tableId":"outbound_log","fieldsUi":{"fieldValues":[{"fieldId":"account_id","fieldValue":"={{ JSON.parse($('Parse Slack Interaction').item.json.payload.actions[0].value).accountId }}"},{"fieldId":"triggered_by","fieldValue":"={{ $('Parse Slack Interaction').item.json.payload.user.username }}"},{"fieldId":"sequence_name","fieldValue":"battlecard-followup"}]}},"id":"b0e11fed-4f8a-471e-83a1-2fac07786d7c","name":"Log Outbound Sequence (Simulated)","type":"n8n-nodes-base.supabase","typeVersion":1,"position":[672,384]},
+    {"parameters":{"assignments":{"assignments":[{"id":"response-text","name":"responseText","type":"string","value":"={{ '🚀 Outbound sequence logged (simulated) by ' + $('Parse Slack Interaction').item.json.payload.user.username }}"}]},"options":{}},"id":"f5569cf2-be35-4b73-91f9-42d9da571384","name":"Set Launch Sequence Response","type":"n8n-nodes-base.set","typeVersion":3.5,"position":[896,384]},
+    {"parameters":{"assignments":{"assignments":[{"id":"response-text","name":"responseText","type":"string","value":"⚠️ Unrecognized action."}]},"options":{}},"id":"a06037fe-5197-4c36-b881-7ce6fcb0b9d5","name":"Set Unknown Action Response","type":"n8n-nodes-base.set","typeVersion":3.5,"position":[896,576]},
+    {"parameters":{"content":"### Review Gate: action handling\nEach branch is a complete path: do the write (if any), set responseText, then fall through to the shared Respond node. Only one branch fires per Slack click.","color":7},"id":"889fecde-5a94-4ebc-a4bf-496161238da8","name":"Sticky Note 36430c9e","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[496,576]},
+    {"parameters":{"content":"### 5. Outbound (simulated)\nLaunch Sequence logs to outbound_log instead of calling a real SEP. Swap in a real Outreach/Salesloft HTTP Request here when ready.","color":3},"id":"be38ebb9-f4c5-43ec-88a8-6dc76d2e85ec","name":"Sticky Note 901893ac","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[496,832]}
+  ],
+  "connections": {
+    "Slack Interaction Webhook": {"main":[[{"node":"Parse Slack Interaction","type":"main","index":0}]]},
+    "Parse Slack Interaction": {"main":[[{"node":"Route by Action","type":"main","index":0}]]},
+    "Route by Action": {"main":[[{"node":"Claim Lead in Supabase","type":"main","index":0}],[{"node":"Set Review Response","type":"main","index":0}],[{"node":"Log Outbound Sequence (Simulated)","type":"main","index":0}],[{"node":"Set Unknown Action Response","type":"main","index":0}]]},
+    "Claim Lead in Supabase": {"main":[[{"node":"Set Claim Lead Response","type":"main","index":0}]]},
+    "Set Claim Lead Response": {"main":[[{"node":"Respond to Slack","type":"main","index":0}]]},
+    "Set Review Response": {"main":[[{"node":"Respond to Slack","type":"main","index":0}]]},
+    "Log Outbound Sequence (Simulated)": {"main":[[{"node":"Set Launch Sequence Response","type":"main","index":0}]]},
+    "Set Launch Sequence Response": {"main":[[{"node":"Respond to Slack","type":"main","index":0}]]},
+    "Set Unknown Action Response": {"main":[[{"node":"Respond to Slack","type":"main","index":0}]]}
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

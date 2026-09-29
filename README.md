@@ -7,6 +7,12 @@ AI Agent, and backed by a full hosted HTML page — within seconds of the event.
 This is the **Account Intelligence & Dynamic Battlecard Agent** from the original
 concept slide, built as two connected n8n workflows.
 
+## Origin
+
+Built for the webinar **"How To Build AI Agents for Your Event Workflows"**
+(September 29, 1:00 PM – 2:00 PM EDT) as a live demo of turning a webinar engagement
+signal into an AI-synthesized, human-gated sales action — end to end, in n8n.
+
 ## Live workflows
 
 | Workflow | n8n link | Purpose |
@@ -14,12 +20,16 @@ concept slide, built as two connected n8n workflows.
 | **Battlecard: Webinar Event to Slack** | [open in n8n](https://jomarebalida.app.n8n.cloud/workflow/GC8P5Dhd2jDJ8Rl9) | Event → CRM lookup → enrichment → AI synthesis → Slack card + HTML page |
 | **Battlecard: Slack Action Handler** | [open in n8n](https://jomarebalida.app.n8n.cloud/workflow/7fv8sCi8qhC8aeuM) | Handles the Slack button clicks (Claim Lead / Review Talking Points / Launch Sequence) |
 
-Source of truth for both lives in this repo under [`n8n-workflows/`](n8n-workflows/) as
-`@n8n/workflow-sdk` TypeScript — the live n8n instance is built from this code, but has
-also been toggled between "real" and "demo/fake-data" states repeatedly while testing.
-See [`docs/05-current-demo-state.md`](docs/05-current-demo-state.md) for what's actually
-live in n8n *right now* versus what this repo's source represents as the intended
-end-state.
+Source of truth for both lives in this repo under [`n8n-workflows/`](n8n-workflows/) —
+each as `@n8n/workflow-sdk` TypeScript (`.ts`, the readable source) **and** as a plain
+n8n export (`.json`, drag-and-drop importable via n8n's "Import from File"). The live
+n8n instance is built from this code, but has also been toggled between "real" and
+"demo/fake-data" states repeatedly while testing — the `.json` files represent the
+intended *real* end-state (fake-data nodes replaced with clearly-marked
+`REPLACE_WITH_...` placeholders and a `notes` field explaining what to restore), not
+whatever demo data happens to be live in n8n at any given moment. See
+[`docs/05-current-demo-state.md`](docs/05-current-demo-state.md) for what's actually
+live in n8n *right now*.
 
 ## Read the docs in this order
 
